@@ -48,28 +48,46 @@ void setup_recovery_kernel(void) {
 bool is_secure_boot(void) {
   bool verification = true;
 
-  /* Read the binary and update the observed measurement 
+  /* Read the binary and update the observed measurement
    * (simplified template provided below) */
   sha256_init(&sha256_ctx);
   struct buf b;
   sha256_update(&sha256_ctx, (const unsigned char*) b.data, BSIZE);
   sha256_final(&sha256_ctx, sys_info_ptr->observed_kernel_measurement);
 
-  /* Three more tasks required below: 
+  /* Three more tasks required below:
    *  1. Compare observed measurement with expected hash
    *  2. Setup the recovery kernel if comparison fails
    *  3. Copy expected kernel hash to the system information table */
   if (!verification)
     setup_recovery_kernel();
-  
+
   return verification;
+}
+
+void copy_kernel_to(uint64 destination, uint64 size)
+{
+  int blockno = 0;
+  int blockno_offset = 4;
+  int copied_size = 0;
+  struct buf buffer;
+  while(copied_size < size)
+  {
+    buffer.blockno = blockno + blockno_offset;
+    kernel_copy(NORMAL, &buffer);
+    uint64 copy_to_addr = destination + (blockno * BSIZE);
+    memmove((char *)copy_to_addr, buffer.data, BSIZE);
+
+    blockno++;
+    copied_size += BSIZE;
+  }
 }
 
 // entry.S jumps here in machine mode on stack0.
 void start()
 {
   /* CSE 536: Define the system information table's location. */
-  sys_info_ptr = (struct sys_info*) 0x0;
+  sys_info_ptr = (struct sys_info*) 0x80080000;
 
   // keep each CPU's hartid in its tp register, for cpuid().
   int id = r_mhartid();
@@ -84,20 +102,20 @@ void start()
   // disable paging
   w_satp(0);
 
-  /* CSE 536: Unless kernelpmp[1-2] booted, allow all memory 
-   * regions to be accessed in S-mode. */ 
+  /* CSE 536: Unless kernelpmp[1-2] booted, allow all memory
+   * regions to be accessed in S-mode. */
   #if !defined(KERNELPMP1) || !defined(KERNELPMP2)
     w_pmpaddr0(0x3fffffffffffffull);
     w_pmpcfg0(0xf);
   #endif
 
-  /* CSE 536: With kernelpmp1, isolate upper 10MBs using TOR */ 
+  /* CSE 536: With kernelpmp1, isolate upper 10MBs using TOR */
   #if defined(KERNELPMP1)
     w_pmpaddr0(0x0ull);
     w_pmpcfg0(0x0);
   #endif
 
-  /* CSE 536: With kernelpmp2, isolate 118-120 MB and 122-126 MB using NAPOT */ 
+  /* CSE 536: With kernelpmp2, isolate 118-120 MB and 122-126 MB using NAPOT */
   #if defined(KERNELPMP2)
     w_pmpaddr0(0x0ull);
     w_pmpcfg0(0x0);
@@ -105,23 +123,29 @@ void start()
 
   /* CSE 536: Verify if the kernel is untampered for secure boot */
   if (!is_secure_boot()) {
-    /* Skip loading since we should have booted into a recovery kernel 
+    /* Skip loading since we should have booted into a recovery kernel
      * in the function is_secure_boot() */
     goto out;
   }
-  
+
   /* CSE 536: Load the NORMAL kernel binary (assuming secure boot passed). */
-  // uint64 kernel_load_addr       = find_kernel_load_addr(NORMAL);
-  // uint64 kernel_binary_size     = find_kernel_size(NORMAL);     
+  uint64 kernel_load_addr       = find_kernel_load_addr(NORMAL);
+  uint64 kernel_binary_size     = find_kernel_size(NORMAL);
+  copy_kernel_to(kernel_load_addr, kernel_binary_size);
   uint64 kernel_entry           = find_kernel_entry_addr(NORMAL);
-  
+
   /* CSE 536: Write the correct kernel entry point */
   w_mepc((uint64) kernel_entry);
- 
+
  out:
   /* CSE 536: Provide system information to the kernel. */
 
   /* CSE 536: Send the observed hash value to the kernel (using sys_info_ptr) */
+
+  sys_info_ptr -> bl_start = 0x80000000;
+  sys_info_ptr -> bl_end = 0x80065848;
+  sys_info_ptr -> dr_start = 0x80065849;
+  sys_info_ptr -> dr_end = 0x88000000;
 
   // delegate all interrupts and exceptions to supervisor mode.
   w_medeleg(0xffff);
