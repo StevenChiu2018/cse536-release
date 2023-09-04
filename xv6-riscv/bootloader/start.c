@@ -111,14 +111,18 @@ void start()
 
   /* CSE 536: With kernelpmp1, isolate upper 10MBs using TOR */
   #if defined(KERNELPMP1)
-    w_pmpaddr0(0x0ull);
-    w_pmpcfg0(0x0);
+    w_pmpaddr0(0x21d40000);
+    w_pmpcfg0(0xf);
   #endif
 
   /* CSE 536: With kernelpmp2, isolate 118-120 MB and 122-126 MB using NAPOT */
   #if defined(KERNELPMP2)
-    w_pmpaddr0(0x0ull);
-    w_pmpcfg0(0x0);
+    w_pmpaddr0(0x21d80000);
+    w_pmpaddr1(0x21dbffff);
+    w_pmpaddr2(0x21e3ffff);
+    w_pmpaddr3(0x21effffe);
+    w_pmpaddr4(0x21fbffff);
+    w_pmpcfg0(0x1f181f180f);
   #endif
 
   /* CSE 536: Verify if the kernel is untampered for secure boot */
