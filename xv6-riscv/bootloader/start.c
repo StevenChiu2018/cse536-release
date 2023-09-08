@@ -154,8 +154,8 @@ void start()
   /* CSE 536: Send the observed hash value to the kernel (using sys_info_ptr) */
 
   sys_info_ptr -> bl_start = 0x80000000;
-  sys_info_ptr -> bl_end = 0x80008bd8;
-  sys_info_ptr -> dr_start = 0x80008bd9;
+  sys_info_ptr -> bl_end = 0x80008bb8;
+  sys_info_ptr -> dr_start = 0x80008bb9;
   sys_info_ptr -> dr_end = 0x88000000;
 
   // delegate all interrupts and exceptions to supervisor mode.

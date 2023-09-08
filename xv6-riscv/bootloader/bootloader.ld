@@ -12,27 +12,26 @@ SECTIONS
   .text :
   {
     *(.text)
-    PROVIDE(ecode = 0x800009fa);
+    PROVIDE(ecode = 0x800009e6);
   }
 
-  /* No .data section in bootloader binary */
   .data :
   {
     *(.data)
-    PROVIDE(edata = .);
+    PROVIDE(edata = 0x80000a08);
   }
 
   .rodata :
   {
     *(.rodata)
-    PROVIDE(erodata = 0x80000b00);
+    PROVIDE(erodata = 0x80000b08);
   }
 
   .bss :
   {
     *(.bss)
-    PROVIDE(ebss = 0x80008bc0);
+    PROVIDE(ebss = 0x80008ba0);
   }
 
-  PROVIDE(end = 0x80008bd8);
+  PROVIDE(end = 0x80008bb8);
 }
