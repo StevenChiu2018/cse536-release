@@ -11,7 +11,7 @@
 struct elfhdr* kernel_elfhdr;
 struct proghdr* kernel_phdr;
 
-uchar* get_binary_addr(enum kernel ktype)
+uint64 get_binary_addr(enum kernel ktype)
 {
     if(ktype == NORMAL) return RAMDISK;
     else return RECOVERYDISK;
@@ -19,12 +19,12 @@ uchar* get_binary_addr(enum kernel ktype)
 
 struct elfhdr* get_elf_header(enum kernel ktype)
 {
-    return (struct elfhdr*)get_binary_addr(ktype)
+    return (struct elfhdr*)get_binary_addr(ktype);
 }
 
 uint64 find_kernel_load_addr(enum kernel ktype) {
     /* CSE 536: Get kernel load address from headers */
-    binary_addr = get_binary_addr(ktype)
+    binary_addr = get_binary_addr(ktype);
     kernel_elfhdr = get_elf_header(ktype);
     uint64 offset = kernel_elfhdr -> phoff;
     ushort size = kernel_elfhdr -> phentsize;
