@@ -24,7 +24,7 @@ struct elfhdr* get_elf_header(enum kernel ktype)
 
 uint64 find_kernel_load_addr(enum kernel ktype) {
     /* CSE 536: Get kernel load address from headers */
-    binary_addr = get_binary_addr(ktype);
+    uint64 binary_addr = get_binary_addr(ktype);
     kernel_elfhdr = get_elf_header(ktype);
     uint64 offset = kernel_elfhdr -> phoff;
     ushort size = kernel_elfhdr -> phentsize;
