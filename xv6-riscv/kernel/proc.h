@@ -117,10 +117,10 @@ struct proc {
   char name[16];               // Process name (debugging)
 
   /* CSE 536: Variables defined for assignment #2. */
-  bool                    ondemand;
-  struct heap_tracker_t   heap_tracker[MAXHEAP];
-  int                     resident_heap_pages;
-  
+  bool ondemand;
+  struct heap_tracker_t heap_tracker[MAXHEAP];
+  int resident_heap_pages;
+
   int cow_group;               // The group of processes sharing memory
   int cow_enabled;             // CoW enabled
 };
