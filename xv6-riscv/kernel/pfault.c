@@ -12,8 +12,12 @@
 #include "fs.h"
 #include "buf.h"
 
+#define VIRTUAL_ADDR_OFFSTET_BITS 12
+
 int loadseg(pagetable_t pagetable, uint64 va, struct inode *ip, uint offset, uint sz);
 int flags2perm(int flags);
+uint64 find_faulting_base_addr(void);
+void load_faulting_page(struct proc *p, uint64 faulting_page_addr);
 
 /* CSE 536: (2.4) read current time. */
 uint64 read_current_timestamp() {
@@ -30,7 +34,7 @@ bool psa_tracker[PSASIZE];
 /* All blocks are free during initialization. */
 void init_psa_regions(void)
 {
-    for (int i = 0; i < PSASIZE; i++) 
+    for (int i = 0; i < PSASIZE; i++)
         psa_tracker[i] = false;
 }
 
@@ -42,7 +46,7 @@ void evict_page_to_disk(struct proc* p) {
     /* Print statement. */
     print_evict_page(0, 0);
     /* Read memory from the user to kernel memory first. */
-    
+
     /* Write to the disk blocks. Below is a template as to how this works. There is
      * definitely a better way but this works for now. :p */
     struct buf* b;
@@ -63,14 +67,13 @@ void retrieve_page_from_disk(struct proc* p, uint64 uvaddr) {
     print_retrieve_page(0, 0);
 
     /* Create a kernel page to read memory temporarily into first. */
-    
+
     /* Read the disk block into temp kernel page. */
 
     /* Copy from temp kernel page to uvaddr (use copyout) */
 }
 
-
-void page_fault_handler(void) 
+void page_fault_handler(void)
 {
     /* Current process struct */
     struct proc *p = myproc();
@@ -79,16 +82,16 @@ void page_fault_handler(void)
     bool load_from_disk = false;
 
     /* Find faulting address. */
-    uint64 faulting_addr = 0;
+    uint64 faulting_addr = find_faulting_base_addr();
     print_page_fault(p->name, faulting_addr);
 
+
     /* Check if the fault address is a heap page. Use p->heap_tracker */
-    if (true) {
+    if (false) {
         goto heap_handle;
     }
 
-    /* If it came here, it is a page from the program binary that we must load. */
-    print_load_seg(faulting_addr, 0, 0);
+    load_faulting_page(p, faulting_addr);
 
     /* Go to out, since the remainder of this code is for the heap. */
     goto out;
@@ -115,4 +118,37 @@ out:
     /* Flush stale page table entries. This is important to always do. */
     sfence_vma();
     return;
+}
+
+uint64 find_faulting_base_addr(void) {
+    uint64 faulting_addr = r_stval();
+    uint64 base_addr = ((faulting_addr >> VIRTUAL_ADDR_OFFSTET_BITS) << VIRTUAL_ADDR_OFFSTET_BITS);
+
+    return base_addr;
+}
+
+void load_faulting_page(struct proc *p, uint64 faulting_page_addr) {
+    begin_op();
+    struct inode *in = namei(p->name);
+    ilock(in);
+    struct elfhdr elf;
+    struct proghdr ph;
+    readi(in, 0, (uint64)&elf, 0, sizeof(elf));
+
+    for(int i=0, off=elf.phoff; i<elf.phnum; i++, off+=sizeof(ph)) {
+        readi(in, 0, (uint64)&ph, off, sizeof(ph));
+
+        if(ph.type != ELF_PROG_LOAD)
+            continue;
+
+        if(faulting_page_addr < ph.vaddr || faulting_page_addr > (ph.vaddr + ph.memsz))
+            continue;
+
+        uvmalloc(p->pagetable, faulting_page_addr, ph.vaddr + ph.memsz, flags2perm(ph.flags));
+        loadseg(p->pagetable, ph.vaddr, in, ph.off, ph.filesz);
+        /* If it came here, it is a page from the program binary that we must load. */
+        print_load_seg(faulting_page_addr, ph.off, ph.memsz);
+    }
+    iunlockput(in);
+    end_op();
 }
