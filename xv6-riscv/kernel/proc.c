@@ -15,6 +15,8 @@ struct proc *initproc;
 int nextpid = 1;
 struct spinlock pid_lock;
 
+int add_to_heap_tracker(struct proc*, int);
+
 extern void forkret(void);
 static void freeproc(struct proc *p);
 
@@ -283,8 +285,15 @@ growproc(int n)
 
   /* CSE 536: For simplicity, I've made all allocations at page-level. */
   n = PGROUNDUP(n);
-
   sz = p->sz;
+
+  if(p->ondemand){
+    int pages = add_to_heap_tracker(p, n);
+    print_skip_heap_region(p->name, sz, pages);
+
+    return 0;
+  }
+
   if(n > 0){
     if((sz = uvmalloc(p->pagetable, sz, sz + n, PTE_W)) == 0) {
       return -1;
@@ -294,6 +303,21 @@ growproc(int n)
   }
   p->sz = sz;
   return 0;
+}
+
+int add_to_heap_tracker(struct proc *p, int n) {
+  int pages;
+
+  for(pages = 0; pages < n; pages+=PGSIZE){
+    p->heap_tracker[p->used_heap_tracker].addr = p->sz;
+    p->heap_tracker[p->used_heap_tracker].startblock = -1;
+    p->heap_tracker[p->used_heap_tracker].last_load_time = 0xFFFFFFFFFFFFFFFF;
+    p->heap_tracker[p->used_heap_tracker].loaded = false;
+    p->sz += PGSIZE;
+    p->used_heap_tracker++;
+  }
+
+  return (int)(pages / PGSIZE);
 }
 
 // Create a new process, copying the parent.

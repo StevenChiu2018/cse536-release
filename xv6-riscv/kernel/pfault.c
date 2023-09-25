@@ -17,7 +17,9 @@
 int loadseg(pagetable_t pagetable, uint64 va, struct inode *ip, uint offset, uint sz);
 int flags2perm(int flags);
 uint64 find_faulting_base_addr(void);
-void load_faulting_page(struct proc *p, uint64 faulting_page_addr);
+void load_binary_page(struct proc *p, uint64 faulting_page_addr);
+void load_heap_page(struct proc*, int);
+int get_heap_tracker_index(struct proc*, uint64);
 
 /* CSE 536: (2.4) read current time. */
 uint64 read_current_timestamp() {
@@ -87,11 +89,12 @@ void page_fault_handler(void)
 
 
     /* Check if the fault address is a heap page. Use p->heap_tracker */
-    if (false) {
+    int heap_tracker_index;
+    if ((heap_tracker_index = get_heap_tracker_index(p, faulting_addr)) != -1) {
         goto heap_handle;
     }
 
-    load_faulting_page(p, faulting_addr);
+    load_binary_page(p, faulting_addr);
 
     /* Go to out, since the remainder of this code is for the heap. */
     goto out;
@@ -103,6 +106,7 @@ heap_handle:
     }
 
     /* 2.3: Map a heap page into the process' address space. (Hint: check growproc) */
+    load_heap_page(p, heap_tracker_index);
 
     /* 2.4: Update the last load time for the loaded heap page in p->heap_tracker. */
 
@@ -127,7 +131,16 @@ uint64 find_faulting_base_addr(void) {
     return base_addr;
 }
 
-void load_faulting_page(struct proc *p, uint64 faulting_page_addr) {
+int get_heap_tracker_index(struct proc *p, uint64 faulting_page_addr) {
+    for(int i=0;i<p->used_heap_tracker;i++) {
+        if(p->heap_tracker[i].addr <= faulting_page_addr && faulting_page_addr < (p->heap_tracker[i].addr + PGSIZE))
+            return i;
+    }
+
+    return -1;
+}
+
+void load_binary_page(struct proc *p, uint64 faulting_page_addr) {
     begin_op();
     struct inode *in = namei(p->name);
     ilock(in);
@@ -151,4 +164,8 @@ void load_faulting_page(struct proc *p, uint64 faulting_page_addr) {
     }
     iunlockput(in);
     end_op();
+}
+
+void load_heap_page(struct proc *p, int heap_tracker_index) {
+    uvmalloc(p->pagetable, p->heap_tracker[heap_tracker_index].addr, p->heap_tracker[heap_tracker_index].addr + PGSIZE, PTE_W);
 }
