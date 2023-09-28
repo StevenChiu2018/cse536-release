@@ -308,16 +308,15 @@ growproc(int n)
 int add_to_heap_tracker(struct proc *p, int n) {
   int pages;
 
-  for(pages = 0; pages < n; pages+=PGSIZE){
-    p->heap_tracker[p->used_heap_tracker].addr = p->sz;
-    p->heap_tracker[p->used_heap_tracker].startblock = -1;
-    p->heap_tracker[p->used_heap_tracker].last_load_time = 0xFFFFFFFFFFFFFFFF;
-    p->heap_tracker[p->used_heap_tracker].loaded = false;
+  for(pages = 0; (pages * PGSIZE) < n; pages++){
+    p->heap_tracker[pages].addr = p->sz;
+    p->heap_tracker[pages].startblock = -1;
+    p->heap_tracker[pages].last_load_time = 0xFFFFFFFFFFFFFFFF;
+    p->heap_tracker[pages].loaded = false;
     p->sz += PGSIZE;
-    p->used_heap_tracker++;
   }
 
-  return (int)(pages / PGSIZE);
+  return pages;
 }
 
 // Create a new process, copying the parent.
