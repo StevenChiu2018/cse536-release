@@ -241,7 +241,7 @@ void load_binary_page(struct proc *p, uint64 faulting_page_addr) {
         if(faulting_page_addr < ph.vaddr || faulting_page_addr > (ph.vaddr + ph.memsz))
             continue;
 
-        uvmalloc(p->pagetable, ph.vaddr, ph.vaddr + ph.memsz, flags2perm(ph.flags));
+        uvmalloc(p->pagetable, faulting_page_addr, ph.vaddr + ph.memsz, flags2perm(ph.flags));
         loadseg(p->pagetable, ph.vaddr, in, ph.off, ph.filesz);
         /* If it came here, it is a page from the program binary that we must load. */
         print_load_seg(faulting_page_addr, ph.off, ph.memsz);
