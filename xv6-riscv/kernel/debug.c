@@ -16,7 +16,7 @@ void print_ondemand_proc(char* name) {
 }
 
 void print_skip_section(char* name, uint64 vaddr, int size) {
-    printf("Skipping program section loading (proc: %s, addr: %x, size: %d)\n", 
+    printf("Skipping program section loading (proc: %s, addr: %x, size: %d)\n",
         name, vaddr, size);
 }
 
@@ -38,10 +38,10 @@ void print_load_seg(uint64 vaddr, uint64 seg, int size) {
 }
 
 void print_skip_heap_region(char* name, uint64 vaddr, int npages) {
-    printf("Skipping heap region allocation (proc: %s, addr: %x, npages: %d)\n", 
+    printf("Skipping heap region allocation (proc: %s, addr: %x, npages: %d)\n",
         name, vaddr, npages);
 }
 
 void print_copy_on_write(struct proc *p, uint64 vaddr) {
-    printf("CoW: proc(%s)[%d] Addr (%x)\n", p->name, p->pid, vaddr);
+    printf("CoW: proc(%s) PID (%d) Addr (%x)\n", p->name, p->pid, vaddr);
 }

@@ -16,6 +16,7 @@ int nextpid = 1;
 struct spinlock pid_lock;
 
 int add_to_heap_tracker(struct proc*, int);
+int vmcopy(struct proc*, struct proc*, int);
 
 extern void forkret(void);
 static void freeproc(struct proc *p);
@@ -343,7 +344,7 @@ fork(int cow_enabled)
   // implement and call the uvm_copy() function defined in cow.c
 
   // Copy user memory from parent to child.
-  if(uvmcopy(p->pagetable, np->pagetable, p->sz) < 0){
+  if(vmcopy(p, np, cow_enabled) < 0){
     freeproc(np);
     release(&np->lock);
     return -1;
@@ -369,6 +370,20 @@ fork(int cow_enabled)
    * from its forked counterpart. */
   np->ondemand = p->ondemand;
 
+  if(cow_enabled) {
+    if(p->cow_enabled)
+      np->cow_group = p->cow_group;
+    else {
+      acquire(&p->lock);
+      np->cow_group = p->pid;
+      p->cow_group = p->pid;
+      release(&p->lock);
+    }
+
+    np->cow_enabled = true;
+    p->cow_enabled = true;
+  }
+
   pid = np->pid;
 
   release(&np->lock);
@@ -382,6 +397,14 @@ fork(int cow_enabled)
   release(&np->lock);
 
   return pid;
+}
+
+int vmcopy(struct proc *p, struct proc *np, int cow_enabled) {
+  if(cow_enabled) {
+    return uvmcopy_cow(p->pagetable, np->pagetable, p->sz);
+  }
+
+  return uvmcopy(p->pagetable, np->pagetable, p->sz);
 }
 
 // Pass p's abandoned children to init.

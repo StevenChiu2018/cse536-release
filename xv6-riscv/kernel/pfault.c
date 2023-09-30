@@ -18,6 +18,7 @@ int loadseg(pagetable_t pagetable, uint64 va, struct inode *ip, uint offset, uin
 int flags2perm(int flags);
 
 uint64 find_faulting_base_addr(void);
+bool is_cow(struct proc*, uint64);
 
 void load_binary_page(struct proc *p, uint64 faulting_page_addr);
 
@@ -172,6 +173,10 @@ void page_fault_handler(void)
     uint64 faulting_addr = find_faulting_base_addr();
     print_page_fault(p->name, faulting_addr);
 
+    if(is_cow(p, faulting_addr)) {
+        copy_on_write(p, faulting_addr);
+        goto out;
+    }
 
     /* Check if the fault address is a heap page. Use p->heap_tracker */
     int heap_tracker_index;
@@ -253,4 +258,18 @@ void load_heap_page(struct proc *p, int heap_tracker_index) {
     p->heap_tracker[heap_tracker_index].loaded = true;
     p->heap_tracker[heap_tracker_index].startblock = -1;
     p->resident_heap_pages++;
+}
+
+bool is_cow(struct proc *p, uint64 va) {
+    if(!p->cow_enabled)
+        return false;
+
+    pte_t *pte;
+
+    if((pte = walk(p->pagetable, va, 0)) == 0)
+        return false;
+    if((*pte & PTE_V) == 0)
+        return false;
+
+    return true;
 }

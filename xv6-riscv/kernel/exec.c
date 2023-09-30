@@ -21,7 +21,14 @@ int flags2perm(int flags)
 }
 
 bool isOnDemand(char *path) {
-  return strncmp(path, "/init", strlen(path)) && strncmp(path, "sh", strlen(path));
+  char *loaded_all_processes_name[] = {"/init", "sh", "test8-cow1", "test9-cow2"};
+
+  for(int i=0;i<4;i++) {
+    if(strncmp(path, loaded_all_processes_name[i], strlen(path)) == 0)
+      return false;
+  }
+
+  return true;
 }
 
 int
