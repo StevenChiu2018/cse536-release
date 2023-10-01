@@ -40,7 +40,7 @@ main(int argc, char *argv[])
     for (int i = 0; i < npages; i++) {
         a = ((int*) (heappages + i*PGSIZE));
         for (int j = 0; j < PGSIZE/sizeof(int); j++) {
-            if (*a != count) 
+            if (*a != count)
                 goto fail;
             a++;
         }

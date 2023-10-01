@@ -28,11 +28,11 @@ int get_heap_tracker_index(struct proc*, uint64);
 int get_contiguous_psa_blockno(int blocks);
 int get_oldest_heap_page_index(struct proc*);
 void set_heap_tracker_for_moving_to_disk(struct heap_tracker_t*, int);
-uchar* copy_to_kernel_space(struct proc*, struct heap_tracker_t*);
+uchar* copy_user_space_to_kernel_space(struct proc*, struct heap_tracker_t*);
 void write_victim_page_to_PSA(int, uchar*);
 
-void load_page_from_PSA(struct proc*, int, int);
-void set_heap_tracker_for_moving_back(struct heap_tracker_t*);
+uchar* copy_PSA_to_kernel_space(struct proc*, int);
+void map_user_page_to(struct proc*, int, uchar*);
 
 /* CSE 536: (2.4) read current time. */
 uint64 read_current_timestamp() {
@@ -63,7 +63,7 @@ void evict_page_to_disk(struct proc* p) {
     int oldest_heap_page_index = get_oldest_heap_page_index(p);
     set_heap_tracker_for_moving_to_disk(&(p->heap_tracker[oldest_heap_page_index]), blockno);
     /* Read memory from the user to kernel memory first. */
-    uchar* kernel_space_addr = copy_to_kernel_space(p, &(p->heap_tracker[oldest_heap_page_index]));
+    uchar* kernel_space_addr = copy_user_space_to_kernel_space(p, &(p->heap_tracker[oldest_heap_page_index]));
     write_victim_page_to_PSA(blockno, kernel_space_addr);
 
     /* Write to the disk blocks. Below is a template as to how this works. There is
@@ -71,7 +71,7 @@ void evict_page_to_disk(struct proc* p) {
 
     /* Unmap swapped out page */
     /* Update the resident heap tracker. */
-    uvmunmap(p->pagetable, p->heap_tracker[oldest_heap_page_index].addr, 1, 0);
+    uvmunmap(p->pagetable, p->heap_tracker[oldest_heap_page_index].addr, 1, 1);
     p->resident_heap_pages--;
     /* Print statement. */
     print_evict_page(p->heap_tracker[oldest_heap_page_index].addr, p->heap_tracker[oldest_heap_page_index].startblock);
@@ -112,7 +112,7 @@ void set_heap_tracker_for_moving_to_disk(struct heap_tracker_t *h, int blockno) 
     h->last_load_time = 0xFFFFFFFFFFFFFFFF;
 }
 
-uchar* copy_to_kernel_space(struct proc *p, struct heap_tracker_t *h) {
+uchar* copy_user_space_to_kernel_space(struct proc *p, struct heap_tracker_t *h) {
     uchar *kernel_space_addr = kalloc();
     copyin(p->pagetable, (char*)kernel_space_addr, h->addr, PGSIZE);
 
@@ -136,32 +136,34 @@ void write_victim_page_to_PSA(int start_blockno, uchar *kernel_space_addr) {
 void retrieve_page_from_disk(struct proc* p, int heap_tracker_index) {
     /* Find where the page is located in disk */
     int blockno = p->heap_tracker[heap_tracker_index].startblock;
-    load_page_from_PSA(p, heap_tracker_index, blockno);
-    set_heap_tracker_for_moving_back(&(p->heap_tracker[heap_tracker_index]));
+    uchar* kernel_space_addr = copy_PSA_to_kernel_space(p, blockno);
+    /* Copy from temp kernel page to uvaddr (use copyout) */
+    map_user_page_to(p, heap_tracker_index, kernel_space_addr);
 
     /* Print statement. */
     print_retrieve_page(p->heap_tracker[heap_tracker_index].addr, blockno);
 }
 
-void load_page_from_PSA(struct proc *p, int heap_tracker_index, int start_blockno) {
+uchar* copy_PSA_to_kernel_space(struct proc *p, int start_blockno) {
     /* Create a kernel page to read memory temporarily into first. */
     /* Read the disk block into temp kernel page. */
-    /* Copy from temp kernel page to uvaddr (use copyout) */
 
-    uint64 va = p->heap_tracker[heap_tracker_index].addr;
     struct buf *b;
+    uchar *kernel_space_addr = kalloc();
 
-    for(int blockno = start_blockno;blockno < 4;blockno++, va += BSIZE) {
+    for(int offset = 0, blockno = start_blockno;offset < PGSIZE;offset += BSIZE, blockno++) {
         b = bread(1, PSASTART + blockno);
-        copyout(p->pagetable, va, (char*)b->data, BSIZE);
+        memmove(kernel_space_addr + offset, b->data, BSIZE);
         brelse(b);
         psa_tracker[blockno] = false;
     }
+
+    return kernel_space_addr;
 }
 
-void set_heap_tracker_for_moving_back(struct heap_tracker_t *h) {
-    h->last_load_time = read_current_timestamp();
-    h->startblock = -1;
+void map_user_page_to(struct proc *p, int heap_tracker_index, uchar *kernel_space_addr) {
+    load_heap_page(p, heap_tracker_index);
+    copyout(p->pagetable, p->heap_tracker[heap_tracker_index].addr, (char*)kernel_space_addr, PGSIZE);
 }
 
 void page_fault_handler(void)
@@ -198,9 +200,10 @@ heap_handle:
     /* 2.4: Heap page was swapped to disk previously. We must load it from disk. */
     if (p->heap_tracker[heap_tracker_index].startblock != -1) {
         retrieve_page_from_disk(p, heap_tracker_index);
+    } else {
+        /* 2.3: Map a heap page into the process' address space. (Hint: check growproc) */
+        load_heap_page(p, heap_tracker_index);
     }
-    /* 2.3: Map a heap page into the process' address space. (Hint: check growproc) */
-    load_heap_page(p, heap_tracker_index);
 
 out:
     /* Flush stale page table entries. This is important to always do. */
