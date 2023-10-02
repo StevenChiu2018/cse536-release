@@ -21,9 +21,9 @@ int flags2perm(int flags)
 }
 
 bool isOnDemand(char *path) {
-  char *loaded_all_processes_name[] = {"/init", "sh", "test8-cow1", "test9-cow2"};
+  char *loaded_all_processes_name[] = {"/init", "sh", "test8-cow1", "test9-cow2", "test10-cow3"};
 
-  for(int i=0;i<4;i++) {
+  for(int i=0;i<5;i++) {
     if(strncmp(path, loaded_all_processes_name[i], strlen(path)) == 0)
       return false;
   }
