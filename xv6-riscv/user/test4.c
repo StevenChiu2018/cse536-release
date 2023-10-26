@@ -15,14 +15,13 @@
 char stacks[PGSIZE*MAXULTHREADS];
 
 uint64 get_current_time(void) {
-    /* Replace with ctime */
-    return 0;
+    return ctime();
 }
 
 void ul_start_func(int a1) {
-    printf("[.] started the thread function (tid = %d, a1 = %d) \n", 
+    printf("[.] started the thread function (tid = %d, a1 = %d) \n",
         get_current_tid(), a1);
-    
+
     uint64 start_time = get_current_time();
     uint64 prev_time = start_time;
 
