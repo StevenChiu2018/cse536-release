@@ -21,7 +21,7 @@ struct vm_state generate_vm_state(void) {
 
     setup_regs(&state);
 
-    return vm_state;
+    return state;
 }
 
 void setup_regs(struct vm_state *state) {
