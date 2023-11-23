@@ -11,7 +11,7 @@ struct vm_reg {
 
 // Keep the virtual state of the VM's privileged registers
 struct vm_state {
-    struct vm_reg privi_regs[25];
+    struct vm_reg privi_regs[33];
 };
 
 void setup_regs(struct vm_state*);
@@ -55,7 +55,14 @@ void setup_regs(struct vm_state *state) {
     state->privi_regs[22] = (struct vm_reg){.code = 0x104, .mode = SUPERVISOR, .val = 0};
     state->privi_regs[23] = (struct vm_reg){.code = 0x105, .mode = SUPERVISOR, .val = 0};
     state->privi_regs[24] = (struct vm_reg){.code = 0x106, .mode = SUPERVISOR, .val = 0};
-    // User trap setup
-    // User trap handling
-    // User trap handling
+    // User trap handling registers
+    state->privi_regs[25] = (struct vm_reg){.code = 0x040, .mode = USER, .val = 0};
+    state->privi_regs[26] = (struct vm_reg){.code = 0x041, .mode = USER, .val = 0};
+    state->privi_regs[27] = (struct vm_reg){.code = 0x042, .mode = USER, .val = 0};
+    state->privi_regs[28] = (struct vm_reg){.code = 0x043, .mode = USER, .val = 0};
+    state->privi_regs[29] = (struct vm_reg){.code = 0x044, .mode = USER, .val = 0};
+    // User trap setup registers
+    state->privi_regs[30] = (struct vm_reg){.code = 0x000, .mode = USER, .val = 0};
+    state->privi_regs[31] = (struct vm_reg){.code = 0x004, .mode = USER, .val = 0};
+    state->privi_regs[32] = (struct vm_reg){.code = 0x005, .mode = USER, .val = 0};
 }
