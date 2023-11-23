@@ -11,7 +11,7 @@ struct vm_reg {
 
 // Keep the virtual state of the VM's privileged registers
 struct vm_state {
-    struct vm_reg privi_regs[20];
+    struct vm_reg privi_regs[25];
 };
 
 void setup_regs(struct vm_state*);
@@ -48,9 +48,14 @@ void setup_regs(struct vm_state *state) {
     state->privi_regs[17] = (struct vm_reg){.code = 0xf13, .mode = MACHINE, .val = 0};
     state->privi_regs[18] = (struct vm_reg){.code = 0xf14, .mode = MACHINE, .val = 0};
     state->privi_regs[19] = (struct vm_reg){.code = 0xf15, .mode = MACHINE, .val = 0};
+    // Supervisor page table register
+    state->privi_regs[20] = (struct vm_reg){.code = 0x180, .mode = SUPERVISOR, .val = 0};
+    // Supervisor trap setup registers
+    state->privi_regs[21] = (struct vm_reg){.code = 0x100, .mode = SUPERVISOR, .val = 0};
+    state->privi_regs[22] = (struct vm_reg){.code = 0x104, .mode = SUPERVISOR, .val = 0};
+    state->privi_regs[23] = (struct vm_reg){.code = 0x105, .mode = SUPERVISOR, .val = 0};
+    state->privi_regs[24] = (struct vm_reg){.code = 0x106, .mode = SUPERVISOR, .val = 0};
     // User trap setup
     // User trap handling
-    // Supervisor trap setup
     // User trap handling
-    // Supervisor page table register
 }
