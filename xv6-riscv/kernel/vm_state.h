@@ -43,7 +43,7 @@ void setup_regs(struct vm_state *state) {
     state->privi_regs[13] = (struct vm_reg){.code = 0x306, .mode = MACHINE, .val = 0};
     state->privi_regs[14] = (struct vm_reg){.code = 0x310, .mode = MACHINE, .val = 0};
     // Machine information registers
-    state->privi_regs[15] = (struct vm_reg){.code = 0xf11, .mode = MACHINE, .val = 0};
+    state->privi_regs[15] = (struct vm_reg){.code = 0xf11, .mode = MACHINE, .val = 0x637365353336};
     state->privi_regs[16] = (struct vm_reg){.code = 0xf12, .mode = MACHINE, .val = 0};
     state->privi_regs[17] = (struct vm_reg){.code = 0xf13, .mode = MACHINE, .val = 0};
     state->privi_regs[18] = (struct vm_reg){.code = 0xf14, .mode = MACHINE, .val = 0};
