@@ -5,27 +5,9 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "defs.h"
+#include "vm_virtual_state.h"
 
-// Struct to keep VM registers (Sample; feel free to change.)
-struct vm_reg {
-    int     code;
-    int     mode;
-    uint64  val;
-};
-
-// Keep the virtual state of the VM's privileged registers
-struct vm_virtual_state {
-    // User trap setup
-    // User trap handling
-    // Supervisor trap setup
-    // User trap handling
-    // Supervisor page table register
-    // Machine information registers
-    // Machine trap setup registers
-    // Machine trap handling registers
-
-    struct vm_reg tmp;
-};
+struct vm_virtual_state vm_state;
 
 struct instruct {
     uint32 op;
