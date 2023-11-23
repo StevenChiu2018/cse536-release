@@ -1,11 +1,11 @@
 #include "types.h"
 
-enum Execution_mode {MACHINE, SUPERVISOR, USER};
+enum execution_mode {MACHINE, SUPERVISOR, USER};
 
 // Struct to keep VM registers (Sample; feel free to change.)
 struct vm_reg {
     int code;
-    enum Execution_mode mode;
+    enum execution_mode mode;
     uint64 val;
 };
 

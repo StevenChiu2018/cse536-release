@@ -7,6 +7,7 @@
 #include "defs.h"
 #include "vm_state.h"
 
+enum execution_mode cur_exe_mode;
 struct vm_state vm_state;
 
 struct instruct {
@@ -71,4 +72,5 @@ struct instruct decode_instruction(uint32 coded_instruction) {
 void trap_and_emulate_init(void) {
     /* Create and initialize all state for the VM */
     vm_state = generate_vm_state();
+    cur_exe_mode = MACHINE;
 }
