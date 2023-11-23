@@ -5,9 +5,9 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "defs.h"
-#include "vm_virtual_state.h"
+#include "vm_state.h"
 
-struct vm_virtual_state vm_state;
+struct vm_state vm_state;
 
 struct instruct {
     uint32 op;
@@ -70,4 +70,5 @@ struct instruct decode_instruction(uint32 coded_instruction) {
 
 void trap_and_emulate_init(void) {
     /* Create and initialize all state for the VM */
+    vm_state = generate_vm_state();
 }
