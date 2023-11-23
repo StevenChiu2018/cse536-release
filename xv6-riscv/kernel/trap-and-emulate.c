@@ -1,7 +1,7 @@
 #include "types.h"
 #include "param.h"
 #include "memlayout.h"
-#include "riscv.h"l
+#include "riscv.h"
 #include "spinlock.h"
 #include "proc.h"
 #include "defs.h"
@@ -35,7 +35,7 @@ struct instruct {
     uint32 uimm;
 };
 
-struct instruct get_instruction(void);
+struct instruct get_trap_instruction(void);
 
 // In your ECALL, add the following for prints
 // struct proc* p = myproc();
@@ -46,31 +46,31 @@ void trap_and_emulate(void) {
 
     /* Retrieve all required values from the instruction */
     uint64 addr     = r_sepc();
-    struct instruct trap_instruct = get_instruction();
+    struct instruct trap_instruct = get_trap_instruction();
 
     /* Print the statement */
     printf("(PI at %p) op = %x, rd = %x, funct3 = %x, rs1 = %x, uimm = %x\n",
                 addr, trap_instruct.op, trap_instruct.rd, trap_instruct.funct3, trap_instruct.rs1, trap_instruct.uimm);
 }
 
-uint64 extract_instruction(void);
-struct instruct decode_instruction(uint64 instruction);
+uint32 extract_instruction(void);
+struct instruct decode_instruction(uint32 instruction);
 
-struct instruct get_instruction(void) {
+struct instruct get_trap_instruction(void) {
     uint64 coded_instruction = extract_instruction();
     return decode_instruction(coded_instruction);
 }
 
-uint64 extract_instruction(void) {
+uint32 extract_instruction(void) {
     struct proc *p = myproc();
     uint64 instruction_va = r_sepc();
-    char *buf;
-    copyin(p->pagetable, buf, instruction_va, 4);
+    char *buf = kalloc();
+    copyin(p->pagetable, buf, instruction_va, PGSIZE);
 
-    return *((uint64*) buf);
+    return *((uint32*) buf);
 }
 
-struct instruct decode_instruction(uint64 coded_instruction) {
+struct instruct decode_instruction(uint32 coded_instruction) {
     struct instruct instruction;
 
     instruction.op = coded_instruction % 128;
