@@ -1,4 +1,3 @@
-#include "riscv.h"
 #include "types.h"
 
 void write_to_register(uint64 regis_code, uint64 value) {

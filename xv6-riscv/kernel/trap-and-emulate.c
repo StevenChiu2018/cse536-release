@@ -82,7 +82,7 @@ uint32 is_valid_to_read(uint32);
 void emulate_trap_instruction(struct instruct* trap_instruction) {
     switch (trap_instruction->funct3)
     {
-        case 0x1:
+        case 0x2:
             do_emulate_csrr(trap_instruction);
             break;
 
