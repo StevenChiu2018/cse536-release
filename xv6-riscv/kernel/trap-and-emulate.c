@@ -6,9 +6,10 @@
 #include "proc.h"
 #include "defs.h"
 #include "vm_state.h"
+#include "rw_registers.h"
 
 enum execution_mode cur_exe_mode;
-struct vm_state vm_state;
+struct vm_state state;
 
 struct instruct {
     uint32 op;
@@ -19,6 +20,7 @@ struct instruct {
 };
 
 struct instruct get_trap_instruction(void);
+void emulate_trap_instruction(struct instruct*);
 
 // In your ECALL, add the following for prints
 // struct proc* p = myproc();
@@ -34,6 +36,11 @@ void trap_and_emulate(void) {
     /* Print the statement */
     printf("(PI at %p) op = %x, rd = %x, funct3 = %x, rs1 = %x, uimm = %x\n",
                 addr, trap_instruct.op, trap_instruct.rd, trap_instruct.funct3, trap_instruct.rs1, trap_instruct.uimm);
+
+    emulate_trap_instruction(&trap_instruct);
+
+    struct proc *p = myproc();
+    p->trapframe->epc += 4;
 }
 
 uint32 extract_instruction(void);
@@ -69,8 +76,38 @@ struct instruct decode_instruction(uint32 coded_instruction) {
     return instruction;
 }
 
+void do_emulate_csrr(struct instruct*);
+uint32 is_valid_to_read(uint32);
+
+void emulate_trap_instruction(struct instruct* trap_instruction) {
+    switch (trap_instruction->funct3)
+    {
+        case 0x1:
+            do_emulate_csrr(trap_instruction);
+            break;
+
+        default:
+            panic("un-emulated instruction happened\n");
+            break;
+    }
+}
+
+void do_emulate_csrr(struct instruct *trap_instruction) {
+    struct vm_reg *reg = get_privi_reg(&state, trap_instruction->uimm);
+
+    if(is_valid_to_read(reg->auth)) {
+        write_to_register(trap_instruction->rd, reg->val);
+    } else {
+        panic("Invalid executation");// TODO: Direct to usertrap
+    }
+}
+
+uint32 is_valid_to_read(uint32 regis_auth) {
+    return cur_exe_mode >= (regis_auth >> 4);
+}
+
 void trap_and_emulate_init(void) {
     /* Create and initialize all state for the VM */
-    vm_state = generate_vm_state();
+    state = generate_vm_state();
     cur_exe_mode = MACHINE;
 }
