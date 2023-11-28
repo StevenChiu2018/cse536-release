@@ -59,6 +59,7 @@ usertrap(void)
     }
 
     p->trapframe->epc += 4;
+    intr_on();
   } else if(scause == 8){
     // system call
     if(killed(p))
