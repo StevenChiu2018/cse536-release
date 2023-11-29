@@ -94,29 +94,27 @@ uint32 emulate_trap_instruction(struct instruct* trap_instruction) {
 }
 
 uint32 do_emulate_csrr(struct instruct *trap_instruction) {
+    struct proc *p = myproc();
     struct vm_reg *reg = get_privi_reg(&state, trap_instruction->uimm);
 
     if(is_valid_to_read(reg->auth)) {
         write_to_register(trap_instruction->rd, reg->val);
-
-        return 0;
     } else {
-        panic("Invalid executation"); // TODO: Direct to usertrap
-
         return -1;
     }
+
+    return 1;
 }
 
 uint32 do_emulate_csrw(struct instruct *trap_instrucion) {
+    struct proc *p = myproc();
     struct vm_reg *reg = get_privi_reg(&state, trap_instrucion->uimm);
 
     if(is_valid_to_write(reg->auth)) {
         reg->val = read_from_register(trap_instrucion->rd);
 
-        return reg->code != 0xf11 || reg->val != 0x0 ? 0 : -1;
+        return reg->code != 0xf11 || reg->val != 0x0 ? 1 : 0;
     } else {
-        panic("Invalid executation"); // TODO: Direct to usertrap
-
         return -1;
     }
 }
