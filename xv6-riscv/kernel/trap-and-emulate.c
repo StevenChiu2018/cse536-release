@@ -38,9 +38,6 @@ void trap_and_emulate(void) {
                 addr, trap_instruct.op, trap_instruct.rd, trap_instruct.funct3, trap_instruct.rs1, trap_instruct.uimm);
 
     emulate_trap_instruction(&trap_instruct);
-
-    struct proc *p = myproc();
-    p->trapframe->epc += 4;
 }
 
 uint32 extract_instruction(void);
@@ -98,7 +95,7 @@ void do_emulate_csrr(struct instruct *trap_instruction) {
     if(is_valid_to_read(reg->auth)) {
         write_to_register(trap_instruction->rd, reg->val);
     } else {
-        panic("Invalid executation");// TODO: Direct to usertrap
+        panic("Invalid executation"); // TODO: Direct to usertrap
     }
 }
 

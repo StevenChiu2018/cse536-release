@@ -36,7 +36,7 @@ void setup_privi_regs(struct vm_state *state) {
     state->privi_regs[5] = (struct vm_reg){.code = 0x34a, .auth = 0x22, .val = 0};
     state->privi_regs[6] = (struct vm_reg){.code = 0x34b, .auth = 0x22, .val = 0};
     // Machine trap setup registers
-    state->privi_regs[7] = (struct vm_reg){.code = 0x300, .auth = 0x22, .val = 0};
+    state->privi_regs[7] = (struct vm_reg){.code = 0x300, .auth = 0x22, .val = 0x1800};
     state->privi_regs[8] = (struct vm_reg){.code = 0xf10, .auth = 0x22, .val = 0};
     state->privi_regs[9] = (struct vm_reg){.code = 0x302, .auth = 0x22, .val = 0};
     state->privi_regs[10] = (struct vm_reg){.code = 0x303, .auth = 0x22, .val = 0};
