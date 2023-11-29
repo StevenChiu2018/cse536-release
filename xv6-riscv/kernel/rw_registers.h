@@ -69,3 +69,73 @@ void write_to_register(uint64 regis_code, uint64 value) {
         p->trapframe->t6 = value;
     }
 }
+
+uint64 read_from_register(uint64 regis_code) {
+    struct proc *p = myproc();
+
+    if(regis_code == 0x1) {
+        return p->trapframe->ra;
+    } else if(regis_code == 1) {
+        return p->trapframe->ra;
+    } else if(regis_code == 2) {
+        return p->trapframe->sp;
+    } else if(regis_code == 3) {
+        return p->trapframe->gp;
+    } else if(regis_code == 4) {
+        return p->trapframe->tp;
+    } else if(regis_code == 5) {
+        return p->trapframe->t0;
+    } else if(regis_code == 6) {
+        return p->trapframe->t1;
+    } else if(regis_code == 7) {
+        return p->trapframe->t2;
+    } else if(regis_code == 8) {
+        return p->trapframe->s0;
+    } else if(regis_code == 9) {
+        return p->trapframe->s1;
+    } else if(regis_code == 10) {
+        return p->trapframe->a0;
+    } else if(regis_code == 11) {
+        return p->trapframe->a1;
+    } else if(regis_code == 12) {
+        return p->trapframe->a2;
+    } else if(regis_code == 13) {
+        return p->trapframe->a3;
+    } else if(regis_code == 14) {
+        return p->trapframe->a4;
+    } else if(regis_code == 15) {
+        return p->trapframe->a5;
+    } else if(regis_code == 16) {
+        return p->trapframe->a6;
+    } else if(regis_code == 17) {
+        return p->trapframe->a7;
+    } else if(regis_code == 18) {
+        return p->trapframe->s2;
+    } else if(regis_code == 19) {
+        return p->trapframe->s3;
+    } else if(regis_code == 20) {
+        return p->trapframe->s4;
+    } else if(regis_code == 21) {
+        return p->trapframe->s5;
+    } else if(regis_code == 22) {
+        return p->trapframe->s6;
+    } else if(regis_code == 23) {
+        return p->trapframe->s7;
+    } else if(regis_code == 24) {
+        return p->trapframe->s8;
+    } else if(regis_code == 25) {
+        return p->trapframe->s9;
+    } else if(regis_code == 26) {
+        return p->trapframe->s10;
+    } else if(regis_code == 27) {
+        return p->trapframe->s11;
+    } else if(regis_code == 28) {
+        return p->trapframe->t3;
+    } else if(regis_code == 29) {
+        return p->trapframe->t4;
+    } else if(regis_code == 30) {
+        return p->trapframe->t5;
+    } else if(regis_code == 31) {
+        return p->trapframe->te;
+    }
+}

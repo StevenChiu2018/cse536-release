@@ -74,6 +74,7 @@ struct instruct decode_instruction(uint32 coded_instruction) {
 }
 
 void do_emulate_csrr(struct instruct*);
+void do_emulate_csrw(struct instruct*);
 uint32 is_valid_to_read(uint32);
 
 void emulate_trap_instruction(struct instruct* trap_instruction) {
@@ -99,8 +100,22 @@ void do_emulate_csrr(struct instruct *trap_instruction) {
     }
 }
 
+void do_emulate_csrw(struct instruct *trap_instrucion) {
+    struct vm_reg *reg = get_privi_reg(&state, trap_instrucion->uimm);
+
+    if(is_valid_to_write(reg->auth)) {
+        reg->val = read_from_register(trap_instrucion->rd);
+    } else {
+        panic("Invalid executation"); // TODO: Direct to usertrap
+    }
+}
+
 uint32 is_valid_to_read(uint32 regis_auth) {
     return cur_exe_mode >= (regis_auth >> 4);
+}
+
+uint32 is_valid_to_write(uint32 regis_auth) {
+    return cur_exe_mode >= (regis_auth & 15);
 }
 
 void trap_and_emulate_init(void) {
