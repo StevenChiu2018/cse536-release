@@ -108,7 +108,7 @@ uint32 do_emulate_csrw(struct instruct *trap_instrucion) {
     struct vm_reg *reg = get_privi_reg(&state, trap_instrucion->uimm);
 
     if(is_valid_to_write(reg->auth)) {
-        reg->val = read_from_register(trap_instrucion->rd);
+        reg->val = read_from_register(trap_instrucion->rs1);
 
         return reg->code != 0xf11 || reg->val != 0x0 ? 1 : 0;
     } else {
