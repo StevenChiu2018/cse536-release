@@ -99,7 +99,7 @@ uint32 emulate_trap_instruction(struct instruct* trap_instruction) {
     } else if(trap_instruction->uimm == 0x102) {
         return do_emulate_sret(trap_instruction);
     } else if(trap_instruction->uimm == 0x0) {
-        return do_emulate_ecall();
+        return do_emulate_ecall(trap_instruction);
     } else {
         panic("un-emulated instruction happened\n");
         return 0;
