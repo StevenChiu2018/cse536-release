@@ -117,11 +117,14 @@ uint32 do_emulate_csrw(struct instruct *trap_instrucion) {
 }
 
 uint32 do_emulate_mret(struct instruct *trap_instruction) {
+    struct proc *p = myproc();
     struct vm_reg *reg = get_privi_reg(&state, 0x300);
     uint64 mpp = reg->val & MSTATUS_MPP_MASK;
 
     if((mpp & MSTATUS_MPP_S) == MSTATUS_MPP_S) {
         cur_exe_mode = SUPERVISOR;
+        struct vm_reg *mepc = get_privi_reg(&state, 0x341);
+        p->trapframe->epc = mepc->val - 4;
     } else {
         return 0;
     }
