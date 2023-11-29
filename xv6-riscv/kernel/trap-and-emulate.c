@@ -164,9 +164,11 @@ uint32 do_emulate_sret(struct instruct *trap_instruction) {
 
 uint32 do_emulate_ecall(struct instruct *trap_instruction) {
     struct proc *p = myproc();
-    struct vm_reg *reg = get_privi_reg(&state, 0x105);
+    struct vm_reg *stvec = get_privi_reg(&state, 0x105);
+    struct vm_reg *sepc = get_privi_reg(&state, 0x141);
     cur_exe_mode = SUPERVISOR;
-    p->trapframe->epc = reg->val - 4;
+    sepc->val = p->trapframe->epc;
+    p->trapframe->epc = stvec->val - 4;
 
     return 1;
 }
