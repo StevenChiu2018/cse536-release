@@ -65,10 +65,8 @@ usertrap(void)
     if(emulate_result == 1) {
       p->trapframe->epc += 4;
       intr_on();
-    } else if(emulate_result == 0) {
-      setkilled(p); // Shutdown process
     } else {
-      panic("unauthorized instruction execution!!"); // TODO: Redirect to user's trap
+      setkilled(p); // Shutdown process
     }
   } else if(scause == 8){
     // system call

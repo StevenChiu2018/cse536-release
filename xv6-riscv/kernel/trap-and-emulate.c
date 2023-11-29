@@ -112,7 +112,7 @@ uint32 do_emulate_csrr(struct instruct *trap_instruction) {
     if(is_valid_to_read(reg->auth)) {
         write_to_register(trap_instruction->rd, reg->val);
     } else {
-        return -1;
+        return 0;
     }
 
     return 1;
@@ -126,7 +126,7 @@ uint32 do_emulate_csrw(struct instruct *trap_instrucion) {
 
         return reg->code != 0xf11 || reg->val != 0x0 ? 1 : 0;
     } else {
-        return -1;
+        return 0;
     }
 }
 
