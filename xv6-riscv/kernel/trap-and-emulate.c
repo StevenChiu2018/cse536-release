@@ -85,6 +85,7 @@ uint32 do_emulate_csrr(struct instruct*);
 uint32 do_emulate_csrw(struct instruct*);
 uint32 do_emulate_mret(struct instruct*);
 uint32 do_emulate_sret(struct instruct*);
+uint32 do_emulate_ecall(struct instruct*);
 uint32 is_valid_to_read(uint32);
 uint32 is_valid_to_write(uint32);
 
@@ -155,6 +156,14 @@ uint32 do_emulate_sret(struct instruct *trap_instruction) {
     } else {
         return 0;
     }
+
+    return 1;
+}
+
+uint32 do_emulate_ecall(struct instruct *trap_instruction) {
+    struct proc *p = myproc();
+    cur_exe_mode = SUPERVISOR;
+    p->trapframe->epc = p->trapframe->kernel_trap - 4;
 
     return 1;
 }
