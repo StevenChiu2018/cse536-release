@@ -1,125 +1,71 @@
 #include "types.h"
 
 void write_to_register(uint64 regis_code, uint64 value) {
-    switch (regis_code)
-    {
-    case 0x1:
-        w_ra(value);
-        break;
+    struct proc *p = myproc();
 
-    case 0x2:
-        w_sp(value);
-        break;
-
-    case 0x5:
-        w_t0(value);
-        break;
-
-    case 0x6:
-        w_t1(value);
-        break;
-
-    case 0x7:
-        w_t2(value);
-        break;
-
-    case 0x8:
-        w_s0(value);
-        break;
-
-    case 0x9:
-        w_s1(value);
-        break;
-
-    case 0xa:
-        w_a0(value);
-        break;
-
-    case 0xb:
-        w_a1(value);
-        break;
-
-    case 0xc:
-        w_a2(value);
-        break;
-
-    case 0xd:
-        w_a3(value);
-        break;
-
-    case 0xe:
-        w_a4(value);
-        break;
-
-    case 0xf:
-        w_a5(value);
-        break;
-
-    case 0x10:
-        w_a6(value);
-        break;
-
-    case 0x11:
-        w_a7(value);
-        break;
-
-    case 0x12:
-        w_s2(value);
-        break;
-
-    case 0x13:
-        w_s3(value);
-        break;
-
-    case 0x14:
-        w_s4(value);
-        break;
-
-    case 0x15:
-        w_s5(value);
-        break;
-
-    case 0x16:
-        w_s6(value);
-        break;
-
-    case 0x17:
-        w_s7(value);
-        break;
-
-    case 0x18:
-        w_s8(value);
-        break;
-
-    case 0x19:
-        w_s9(value);
-        break;
-
-    case 0x1a:
-        w_s10(value);
-        break;
-
-    case 0x1b:
-        w_s11(value);
-        break;
-
-    case 0x1c:
-        w_t3(value);
-        break;
-
-    case 0x1d:
-        w_t4(value);
-        break;
-
-    case 0x1e:
-        w_t5(value);
-        break;
-
-    case 0x1f:
-        w_t6(value);
-        break;
-
-    default:
-        break;
+    if(regis_code == 0x1) {
+        p->trapframe->ra = value;
+    } else if(regis_code == 1) {
+        p->trapframe->ra = value;
+    } else if(regis_code == 2) {
+        p->trapframe->sp = value;
+    } else if(regis_code == 3) {
+        p->trapframe->gp = value;
+    } else if(regis_code == 4) {
+        p->trapframe->tp = value;
+    } else if(regis_code == 5) {
+        p->trapframe->t0 = value;
+    } else if(regis_code == 6) {
+        p->trapframe->t1 = value;
+    } else if(regis_code == 7) {
+        p->trapframe->t2 = value;
+    } else if(regis_code == 8) {
+        p->trapframe->s0 = value;
+    } else if(regis_code == 9) {
+        p->trapframe->s1 = value;
+    } else if(regis_code == 10) {
+        p->trapframe->a0 = value;
+    } else if(regis_code == 11) {
+        p->trapframe->a1 = value;
+    } else if(regis_code == 12) {
+        p->trapframe->a2 = value;
+    } else if(regis_code == 13) {
+        p->trapframe->a3 = value;
+    } else if(regis_code == 14) {
+        p->trapframe->a4 = value;
+    } else if(regis_code == 15) {
+        p->trapframe->a5 = value;
+    } else if(regis_code == 16) {
+        p->trapframe->a6 = value;
+    } else if(regis_code == 17) {
+        p->trapframe->a7 = value;
+    } else if(regis_code == 18) {
+        p->trapframe->s2 = value;
+    } else if(regis_code == 19) {
+        p->trapframe->s3 = value;
+    } else if(regis_code == 20) {
+        p->trapframe->s4 = value;
+    } else if(regis_code == 21) {
+        p->trapframe->s5 = value;
+    } else if(regis_code == 22) {
+        p->trapframe->s6 = value;
+    } else if(regis_code == 23) {
+        p->trapframe->s7 = value;
+    } else if(regis_code == 24) {
+        p->trapframe->s8 = value;
+    } else if(regis_code == 25) {
+        p->trapframe->s9 = value;
+    } else if(regis_code == 26) {
+        p->trapframe->s10 = value;
+    } else if(regis_code == 27) {
+        p->trapframe->s11 = value;
+    } else if(regis_code == 28) {
+        p->trapframe->t3 = value;
+    } else if(regis_code == 29) {
+        p->trapframe->t4 = value;
+    } else if(regis_code == 30) {
+        p->trapframe->t5 = value;
+    } else if(regis_code == 31) {
+        p->trapframe->t6 = value;
     }
 }

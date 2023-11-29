@@ -53,11 +53,8 @@ usertrap(void)
   p->trapframe->epc = r_sepc();
   uint64 scause = r_scause();
 
-  if(is_vm_process()) {
-    if(scause == 2 || scause == 8) {
-      trap_and_emulate();
-    }
-
+  if(is_vm_process() && (scause == 2 || scause == 8)) {
+    trap_and_emulate();
     p->trapframe->epc += 4;
     intr_on();
   } else if(scause == 8){
