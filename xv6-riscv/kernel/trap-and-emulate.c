@@ -76,6 +76,7 @@ struct instruct decode_instruction(uint32 coded_instruction) {
 uint32 do_emulate_csrr(struct instruct*);
 uint32 do_emulate_csrw(struct instruct*);
 uint32 do_emulate_mret(struct instruct*);
+uint32 do_emulate_sret(struct instruct*);
 uint32 is_valid_to_read(uint32);
 uint32 is_valid_to_write(uint32);
 
@@ -86,6 +87,8 @@ uint32 emulate_trap_instruction(struct instruct* trap_instruction) {
         return do_emulate_csrr(trap_instruction);
     } else if(trap_instruction->uimm == 0x302) {
         return do_emulate_mret(trap_instruction);
+    } else if(trap_instruction->uimm == 0x102) {
+        return do_emulate_sret(trap_instruction);
     } else {
         panic("un-emulated instruction happened\n");
         return 0;
@@ -125,6 +128,22 @@ uint32 do_emulate_mret(struct instruct *trap_instruction) {
         cur_exe_mode = SUPERVISOR;
         struct vm_reg *mepc = get_privi_reg(&state, 0x341);
         p->trapframe->epc = mepc->val - 4;
+    } else {
+        return 0;
+    }
+
+    return 1;
+}
+
+uint32 do_emulate_sret(struct instruct *trap_instruction) {
+    struct proc *p = myproc();
+    struct vm_reg *reg = get_privi_reg(&state, 0x100);
+    uint64 spp = reg->val & SSTATUS_SPP;
+
+    if(spp == 0) {
+        cur_exe_mode = USER;
+        struct vm_reg *sepc = get_privi_reg(&state, 0x141);
+        p->trapframe->epc = sepc->val - 4;
     } else {
         return 0;
     }
