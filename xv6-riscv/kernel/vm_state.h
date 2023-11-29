@@ -1,6 +1,6 @@
 #include "types.h"
 
-#define PRIVI_REGS_AMOUNT 33
+#define PRIVI_REGS_AMOUNT 38
 
 enum execution_mode {USER, SUPERVISOR, MACHINE};
 
@@ -57,16 +57,22 @@ void setup_privi_regs(struct vm_state *state) {
     state->privi_regs[22] = (struct vm_reg){.code = 0x104, .auth = 0x11, .val = 0};
     state->privi_regs[23] = (struct vm_reg){.code = 0x105, .auth = 0x11, .val = 0};
     state->privi_regs[24] = (struct vm_reg){.code = 0x106, .auth = 0x11, .val = 0};
+    // Supervisor trap handling registers
+    state->privi_regs[25] = (struct vm_reg){.code = 0x140, .auth = 0x11, .val = 0};
+    state->privi_regs[26] = (struct vm_reg){.code = 0x141, .auth = 0x11, .val = 0};
+    state->privi_regs[27] = (struct vm_reg){.code = 0x142, .auth = 0x11, .val = 0};
+    state->privi_regs[28] = (struct vm_reg){.code = 0x143, .auth = 0x11, .val = 0};
+    state->privi_regs[29] = (struct vm_reg){.code = 0x144, .auth = 0x11, .val = 0};
     // User trap handling registers
-    state->privi_regs[25] = (struct vm_reg){.code = 0x040, .auth = 0x00, .val = 0};
-    state->privi_regs[26] = (struct vm_reg){.code = 0x041, .auth = 0x00, .val = 0};
-    state->privi_regs[27] = (struct vm_reg){.code = 0x042, .auth = 0x00, .val = 0};
-    state->privi_regs[28] = (struct vm_reg){.code = 0x043, .auth = 0x00, .val = 0};
-    state->privi_regs[29] = (struct vm_reg){.code = 0x044, .auth = 0x00, .val = 0};
+    state->privi_regs[30] = (struct vm_reg){.code = 0x040, .auth = 0x00, .val = 0};
+    state->privi_regs[31] = (struct vm_reg){.code = 0x041, .auth = 0x00, .val = 0};
+    state->privi_regs[32] = (struct vm_reg){.code = 0x042, .auth = 0x00, .val = 0};
+    state->privi_regs[33] = (struct vm_reg){.code = 0x043, .auth = 0x00, .val = 0};
+    state->privi_regs[34] = (struct vm_reg){.code = 0x044, .auth = 0x00, .val = 0};
     // User trap setup registers
-    state->privi_regs[30] = (struct vm_reg){.code = 0x000, .auth = 0x00, .val = 0};
-    state->privi_regs[31] = (struct vm_reg){.code = 0x004, .auth = 0x00, .val = 0};
-    state->privi_regs[32] = (struct vm_reg){.code = 0x005, .auth = 0x00, .val = 0};
+    state->privi_regs[35] = (struct vm_reg){.code = 0x000, .auth = 0x00, .val = 0};
+    state->privi_regs[36] = (struct vm_reg){.code = 0x004, .auth = 0x00, .val = 0};
+    state->privi_regs[37] = (struct vm_reg){.code = 0x005, .auth = 0x00, .val = 0};
 }
 
 struct vm_reg* get_privi_reg(struct vm_state* state, int code) {
