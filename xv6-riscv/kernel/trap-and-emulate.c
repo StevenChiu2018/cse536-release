@@ -12,6 +12,7 @@ enum execution_mode cur_exe_mode;
 struct vm_state state;
 
 struct instruct {
+    uint64 addr;
     uint32 op;
     uint32 rd;
     uint32 funct3;
@@ -25,17 +26,23 @@ uint32 emulate_trap_instruction(struct instruct*);
 // In your ECALL, add the following for prints
 // struct proc* p = myproc();
 // printf("(EC at %p)\n", p->trapframe->epc);
+uint32 trap_and_emulate_ecall(void) {
+    struct instruct trap_instruct = get_trap_instruction();
+
+    printf("(EC at %p)\n", trap_instruct.addr);
+
+    return emulate_trap_instruction(&trap_instruct);
+}
 
 uint32 trap_and_emulate(void) {
     /* Comes here when a VM tries to execute a supervisor instruction. */
 
     /* Retrieve all required values from the instruction */
-    uint64 addr     = r_sepc();
     struct instruct trap_instruct = get_trap_instruction();
 
     /* Print the statement */
     printf("(PI at %p) op = %x, rd = %x, funct3 = %x, rs1 = %x, uimm = %x\n",
-                addr, trap_instruct.op, trap_instruct.rd, trap_instruct.funct3, trap_instruct.rs1, trap_instruct.uimm);
+                trap_instruct.addr, trap_instruct.op, trap_instruct.rd, trap_instruct.funct3, trap_instruct.rs1, trap_instruct.uimm);
 
     return emulate_trap_instruction(&trap_instruct);
 }
@@ -60,6 +67,7 @@ uint32 extract_instruction(void) {
 struct instruct decode_instruction(uint32 coded_instruction) {
     struct instruct instruction;
 
+    instruction.addr = r_sepc();
     instruction.op = coded_instruction % 128;
     coded_instruction >>= 7;
     instruction.rd = coded_instruction % 32;
