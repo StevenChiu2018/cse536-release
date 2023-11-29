@@ -94,7 +94,6 @@ uint32 emulate_trap_instruction(struct instruct* trap_instruction) {
 }
 
 uint32 do_emulate_csrr(struct instruct *trap_instruction) {
-    struct proc *p = myproc();
     struct vm_reg *reg = get_privi_reg(&state, trap_instruction->uimm);
 
     if(is_valid_to_read(reg->auth)) {
@@ -107,7 +106,6 @@ uint32 do_emulate_csrr(struct instruct *trap_instruction) {
 }
 
 uint32 do_emulate_csrw(struct instruct *trap_instrucion) {
-    struct proc *p = myproc();
     struct vm_reg *reg = get_privi_reg(&state, trap_instrucion->uimm);
 
     if(is_valid_to_write(reg->auth)) {
