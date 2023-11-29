@@ -54,9 +54,13 @@ usertrap(void)
   uint64 scause = r_scause();
 
   if(is_vm_process() && (scause == 2 || scause == 8)) {
-    trap_and_emulate();
-    p->trapframe->epc += 4;
-    intr_on();
+    if(trap_and_emulate() == 0) {
+      p->trapframe->epc += 4;
+      intr_on();
+    } else {
+      setkilled(p);
+    }
+
   } else if(scause == 8){
     // system call
     if(killed(p))

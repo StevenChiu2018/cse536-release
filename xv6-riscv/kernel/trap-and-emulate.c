@@ -20,13 +20,13 @@ struct instruct {
 };
 
 struct instruct get_trap_instruction(void);
-void emulate_trap_instruction(struct instruct*);
+uint32 emulate_trap_instruction(struct instruct*);
 
 // In your ECALL, add the following for prints
 // struct proc* p = myproc();
 // printf("(EC at %p)\n", p->trapframe->epc);
 
-void trap_and_emulate(void) {
+uint32 trap_and_emulate(void) {
     /* Comes here when a VM tries to execute a supervisor instruction. */
 
     /* Retrieve all required values from the instruction */
@@ -37,7 +37,7 @@ void trap_and_emulate(void) {
     printf("(PI at %p) op = %x, rd = %x, funct3 = %x, rs1 = %x, uimm = %x\n",
                 addr, trap_instruct.op, trap_instruct.rd, trap_instruct.funct3, trap_instruct.rs1, trap_instruct.uimm);
 
-    emulate_trap_instruction(&trap_instruct);
+    return emulate_trap_instruction(&trap_instruct);
 }
 
 uint32 extract_instruction(void);
@@ -73,16 +73,18 @@ struct instruct decode_instruction(uint32 coded_instruction) {
     return instruction;
 }
 
-void do_emulate_csrr(struct instruct*);
-void do_emulate_csrw(struct instruct*);
+uint32 do_emulate_csrr(struct instruct*);
+uint32 do_emulate_csrw(struct instruct*);
 uint32 is_valid_to_read(uint32);
 
-void emulate_trap_instruction(struct instruct* trap_instruction) {
+uint32 emulate_trap_instruction(struct instruct* trap_instruction) {
     switch (trap_instruction->funct3)
     {
+        case 0x1:
+            return do_emulate_csrw(trap_instruction);
+
         case 0x2:
-            do_emulate_csrr(trap_instruction);
-            break;
+            return do_emulate_csrr(trap_instruction);
 
         default:
             panic("un-emulated instruction happened\n");
@@ -90,23 +92,31 @@ void emulate_trap_instruction(struct instruct* trap_instruction) {
     }
 }
 
-void do_emulate_csrr(struct instruct *trap_instruction) {
+uint32 do_emulate_csrr(struct instruct *trap_instruction) {
     struct vm_reg *reg = get_privi_reg(&state, trap_instruction->uimm);
 
     if(is_valid_to_read(reg->auth)) {
         write_to_register(trap_instruction->rd, reg->val);
+
+        return 0;
     } else {
         panic("Invalid executation"); // TODO: Direct to usertrap
+
+        return -1;
     }
 }
 
-void do_emulate_csrw(struct instruct *trap_instrucion) {
+uint32 do_emulate_csrw(struct instruct *trap_instrucion) {
     struct vm_reg *reg = get_privi_reg(&state, trap_instrucion->uimm);
 
     if(is_valid_to_write(reg->auth)) {
         reg->val = read_from_register(trap_instrucion->rd);
+
+        return reg->code != 0xf11 || reg->val != 0x0 ? 0 : -1;
     } else {
         panic("Invalid executation"); // TODO: Direct to usertrap
+
+        return -1;
     }
 }
 
