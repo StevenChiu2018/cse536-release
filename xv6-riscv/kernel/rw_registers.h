@@ -136,6 +136,8 @@ uint64 read_from_register(uint64 regis_code) {
     } else if(regis_code == 30) {
         return p->trapframe->t5;
     } else if(regis_code == 31) {
-        return p->trapframe->te;
+        return p->trapframe->t6;
     }
+
+    return -1;
 }

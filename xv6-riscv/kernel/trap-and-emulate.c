@@ -76,6 +76,7 @@ struct instruct decode_instruction(uint32 coded_instruction) {
 uint32 do_emulate_csrr(struct instruct*);
 uint32 do_emulate_csrw(struct instruct*);
 uint32 is_valid_to_read(uint32);
+uint32 is_valid_to_write(uint32)
 
 uint32 emulate_trap_instruction(struct instruct* trap_instruction) {
     switch (trap_instruction->funct3)
