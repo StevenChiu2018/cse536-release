@@ -75,21 +75,20 @@ struct instruct decode_instruction(uint32 coded_instruction) {
 
 uint32 do_emulate_csrr(struct instruct*);
 uint32 do_emulate_csrw(struct instruct*);
+uint32 do_emulate_mret(struct instruct*);
 uint32 is_valid_to_read(uint32);
 uint32 is_valid_to_write(uint32);
 
 uint32 emulate_trap_instruction(struct instruct* trap_instruction) {
-    switch (trap_instruction->funct3)
-    {
-        case 0x1:
-            return do_emulate_csrw(trap_instruction);
-
-        case 0x2:
-            return do_emulate_csrr(trap_instruction);
-
-        default:
-            panic("un-emulated instruction happened\n");
-            break;
+    if(trap_instruction->funct3 == 0x1) {
+        return do_emulate_csrw(trap_instruction);
+    } else if(trap_instruction->funct3 == 0x2) {
+        return do_emulate_csrr(trap_instruction);
+    } else if(trap_instruction->uimm == 0x302) {
+        return do_emulate_mret(trap_instruction);
+    } else {
+        panic("un-emulated instruction happened\n");
+        return 0;
     }
 }
 
@@ -115,6 +114,19 @@ uint32 do_emulate_csrw(struct instruct *trap_instrucion) {
     } else {
         return -1;
     }
+}
+
+uint32 do_emulate_mret(struct instruct *trap_instruction) {
+    struct vm_reg *reg = get_privi_reg(&state, 0x300);
+    uint64 mpp = reg->val & MSTATUS_MPP_MASK;
+
+    if((mpp & MSTATUS_MPP_S) == MSTATUS_MPP_S) {
+        cur_exe_mode = SUPERVISOR;
+    } else {
+        return 0;
+    }
+
+    return 1;
 }
 
 uint32 is_valid_to_read(uint32 regis_auth) {
