@@ -62,7 +62,7 @@ usertrap(void)
     } else if(emulate_result == 0) {
       setkilled(p); // Shutdown process
     } else {
-      p->trapframe->epc = p->trapframe->kernel_trap;
+      panic("unauthorized instruction execution!!"); // TODO: Redirect to user's trap
     }
   } else if(scause == 8){
     // system call
