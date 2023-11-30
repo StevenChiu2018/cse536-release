@@ -130,6 +130,8 @@ uint32 do_emulate_csrw(struct instruct *trap_instrucion) {
     }
 }
 
+void prepare_US_page_table(void);
+
 uint32 do_emulate_mret(struct instruct *trap_instruction) {
     struct proc *p = myproc();
     struct vm_reg *reg = get_privi_reg(&state, 0x300);
@@ -139,11 +141,19 @@ uint32 do_emulate_mret(struct instruct *trap_instruction) {
         cur_exe_mode = SUPERVISOR;
         struct vm_reg *mepc = get_privi_reg(&state, 0x341);
         p->trapframe->epc = mepc->val - 4;
+
+        prepare_US_page_table();
     } else {
         return 0;
     }
 
     return 1;
+}
+
+void prepare_US_page_table(void) {
+    struct proc *p = myproc();
+    p->vm_pagetable = uvmcreate();
+    uvmcopy(p->pagetable, p->vm_pagetable, p->sz);
 }
 
 uint32 do_emulate_sret(struct instruct *trap_instruction) {
