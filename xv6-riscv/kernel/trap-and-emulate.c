@@ -8,6 +8,8 @@
 #include "vm_state.h"
 #include "rw_registers.h"
 
+#define VM_PH_START_AT 0x80000000
+
 enum execution_mode cur_exe_mode;
 struct vm_state state;
 
@@ -168,7 +170,6 @@ uint64 get_PTE_perm(uint64);
 void copy_page(uint64, uint64);
 
 void prepare_mem_protection_area(void) {
-    struct proc *p = myproc();
     struct vm_reg *pmpconfig0 = get_privi_reg(&state, 0x3a0);
     struct vm_reg *pmpaddr0 = get_privi_reg(&state, 0x3b0);
 
@@ -177,11 +178,21 @@ void prepare_mem_protection_area(void) {
 
     uint64 upper_bound = (pmpaddr0->val << 2);
 
-    if(upper_bound < 0x80000000) {
+    if(upper_bound < VM_PH_START_AT) {
         return;
     }
 
-    uvmcopy(p->vm_pagetable, p->pagetable, upper_bound - 0x80000000);
+    copy_page(upper_bound - VM_PH_START_AT, perm);
+}
+
+void copy_page(uint64 size, uint64 perm) {
+    struct proc *p = myproc();
+
+    for(uint64 start_at = 0; start_at < size; start_at += PGSIZE) {
+        uint64 pa = walkaddr(p->vm_pagetable, start_at);
+
+        mappages(p->pagetable, start_at, PGSIZE, pa, perm);
+    }
 }
 
 uint64 get_PTE_perm(uint64 pmpauth) {
