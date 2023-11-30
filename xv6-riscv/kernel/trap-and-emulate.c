@@ -160,8 +160,7 @@ void prepare_US_page_table(void) {
 
 void backup_pt(void) {
     struct proc *p = myproc();
-    p->vm_pagetable = uvmcreate();
-    uvmcopy(p->pagetable, p->vm_pagetable, p->sz);
+    p->vm_pagetable = p->pagetable;
     p->pagetable = uvmcreate();
 }
 
