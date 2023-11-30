@@ -8,7 +8,7 @@
 #include "vm_state.h"
 #include "rw_registers.h"
 
-#define VM_PH_START_AT 0x80000000
+#define VM_VA_START_AT 0x80000000
 
 enum execution_mode cur_exe_mode;
 struct vm_state state;
@@ -178,17 +178,17 @@ void prepare_mem_protection_area(void) {
 
     uint64 upper_bound = (pmpaddr0->val << 2);
 
-    if(upper_bound < VM_PH_START_AT) {
+    if(upper_bound < VM_VA_START_AT) {
         return;
     }
 
-    copy_page(upper_bound - VM_PH_START_AT, perm);
+    copy_page(upper_bound, perm);
 }
 
-void copy_page(uint64 size, uint64 perm) {
+void copy_page(uint64 upper_bound, uint64 perm) {
     struct proc *p = myproc();
 
-    for(uint64 start_at = 0; start_at < size; start_at += PGSIZE) {
+    for(uint64 start_at = VM_VA_START_AT; start_at < upper_bound; start_at += PGSIZE) {
         uint64 pa = walkaddr(p->vm_pagetable, start_at);
 
         mappages(p->pagetable, start_at, PGSIZE, pa, perm);
