@@ -150,10 +150,53 @@ uint32 do_emulate_mret(struct instruct *trap_instruction) {
     return 1;
 }
 
+void prepare_mem_protection_area(void);
+
 void prepare_US_page_table(void) {
     struct proc *p = myproc();
     p->vm_pagetable = uvmcreate();
-    uvmcopy(p->pagetable, p->vm_pagetable, p->sz);
+    backup_page_table();
+}
+
+uint64 get_PTE_perm(uint64);
+void copy_page(uint64, uint64);
+
+void prepare_mem_protection_area(void) {
+    struct proc *p = myproc();
+    struct vm_reg *pmpconfig0 = get_privi_reg(&state, 0x3a0);
+    struct vm_reg *pmpaddr0 = get_privi_reg(&state, 0x3b0);
+
+    if((pmpaddr0->val << 2) < 0x80000000) {
+        return;
+    }
+
+    uint64 pmpauth = pmpconfig0->val & 3;
+    uint64 perm = get_PTE_perm(pmpauth);
+
+    uint64 size = pmpaddr0->val << 2 - 0x80000000;
+
+    copy_page(size, perm);
+}
+
+void copy_page(uint64 upper_bound, uint64 perm) {
+    struct proc *p = myproc();
+
+    for(uint64 start_at = 0x80000000; start_at < upper_bound; start_at += PGSIZE) {
+        uint64 size = (start_at + PGSIZE) < upper_bound ? PGSIZE : (upper_bound - start_at);
+        uint64 pa = walk(p->pagetable, start_at, 0);
+
+        mappages(p->pagetable, start_at, size, pa, perm);
+    }
+}
+
+uint64 get_PTE_perm(uint64 pmpauth) {
+    if(pmpauth == 1) {
+        return PTE_R;
+    } else if(pmpauth == 2) {
+        return PTE_W;
+    } else {
+        return PTE_U;
+    }
 }
 
 uint32 do_emulate_sret(struct instruct *trap_instruction) {
