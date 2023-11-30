@@ -150,13 +150,19 @@ uint32 do_emulate_mret(struct instruct *trap_instruction) {
     return 1;
 }
 
+void backup_pt(void);
 void prepare_mem_protection_area(void);
 
 void prepare_US_page_table(void) {
+    backup_pt();
+    prepare_mem_protection_area();
+}
+
+void backup_pt(void) {
     struct proc *p = myproc();
     p->vm_pagetable = uvmcreate();
-
-    prepare_mem_protection_area();
+    uvmcopy(p->pagetable, p->vm_pagetable, p->sz);
+    p->pagetable = uvmcreate();
 }
 
 uint64 get_PTE_perm(uint64);
@@ -183,7 +189,7 @@ void copy_page(uint64 upper_bound, uint64 perm) {
 
     for(uint64 start_at = 0x80000000; start_at < upper_bound; start_at += PGSIZE) {
         uint64 size = (start_at + PGSIZE) < upper_bound ? PGSIZE : (upper_bound - start_at);
-        uint64 pa = walkaddr(p->pagetable, start_at);
+        uint64 pa = walkaddr(p->vm_pagetable, start_at);
 
         mappages(p->pagetable, start_at, size, pa, perm);
     }
