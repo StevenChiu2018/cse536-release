@@ -155,14 +155,14 @@ void prepare_mem_protection_area(void);
 void prepare_US_page_table(void) {
     struct proc *p = myproc();
     p->vm_pagetable = uvmcreate();
-    backup_page_table();
+
+    prepare_mem_protection_area();
 }
 
 uint64 get_PTE_perm(uint64);
 void copy_page(uint64, uint64);
 
 void prepare_mem_protection_area(void) {
-    struct proc *p = myproc();
     struct vm_reg *pmpconfig0 = get_privi_reg(&state, 0x3a0);
     struct vm_reg *pmpaddr0 = get_privi_reg(&state, 0x3b0);
 
@@ -173,7 +173,7 @@ void prepare_mem_protection_area(void) {
     uint64 pmpauth = pmpconfig0->val & 3;
     uint64 perm = get_PTE_perm(pmpauth);
 
-    uint64 size = pmpaddr0->val << 2 - 0x80000000;
+    uint64 size = (pmpaddr0->val << 2) - 0x80000000;
 
     copy_page(size, perm);
 }
@@ -183,7 +183,7 @@ void copy_page(uint64 upper_bound, uint64 perm) {
 
     for(uint64 start_at = 0x80000000; start_at < upper_bound; start_at += PGSIZE) {
         uint64 size = (start_at + PGSIZE) < upper_bound ? PGSIZE : (upper_bound - start_at);
-        uint64 pa = walk(p->pagetable, start_at, 0);
+        uint64 pa = walkaddr(p->pagetable, start_at);
 
         mappages(p->pagetable, start_at, size, pa, perm);
     }
