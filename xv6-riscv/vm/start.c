@@ -45,6 +45,9 @@ start()
   w_mideleg(0xffff);
   w_sie(r_sie() | SIE_SEIE | SIE_STIE | SIE_SSIE);
 
+  w_pmpaddr0(0x80400000 >> 2);
+  w_pmpcfg0(0xf);
+
   // switch to supervisor mode and jump to main().
   asm volatile("mret");
 }

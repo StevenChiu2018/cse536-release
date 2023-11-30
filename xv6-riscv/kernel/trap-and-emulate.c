@@ -171,16 +171,16 @@ void prepare_mem_protection_area(void) {
     struct vm_reg *pmpconfig0 = get_privi_reg(&state, 0x3a0);
     struct vm_reg *pmpaddr0 = get_privi_reg(&state, 0x3b0);
 
-    if((pmpaddr0->val << 2) < 0x80000000) {
-        return;
-    }
-
     uint64 pmpauth = pmpconfig0->val & 3;
     uint64 perm = get_PTE_perm(pmpauth);
 
-    uint64 size = (pmpaddr0->val << 2) - 0x80000000;
+    uint64 upper_bound = (pmpaddr0->val << 2);
 
-    copy_page(size, perm);
+    if(upper_bound < 0x80000000) {
+        return;
+    }
+
+    copy_page(upper_bound, perm);
 }
 
 void copy_page(uint64 upper_bound, uint64 perm) {
@@ -200,7 +200,7 @@ uint64 get_PTE_perm(uint64 pmpauth) {
     } else if(pmpauth == 2) {
         return PTE_W;
     } else {
-        return PTE_U;
+        return PTE_U | PTE_R | PTE_W | PTE_X;
     }
 }
 
