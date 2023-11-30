@@ -135,7 +135,7 @@ uint32 do_emulate_mret(struct instruct *trap_instruction) {
     struct vm_reg *reg = get_privi_reg(&state, 0x300);
     uint64 mpp = reg->val & MSTATUS_MPP_MASK;
 
-    if((mpp & MSTATUS_MPP_S) == MSTATUS_MPP_S) {
+    if(cur_exe_mode == MACHINE && (mpp & MSTATUS_MPP_S) == MSTATUS_MPP_S) {
         cur_exe_mode = SUPERVISOR;
         struct vm_reg *mepc = get_privi_reg(&state, 0x341);
         p->trapframe->epc = mepc->val - 4;
@@ -151,7 +151,7 @@ uint32 do_emulate_sret(struct instruct *trap_instruction) {
     struct vm_reg *reg = get_privi_reg(&state, 0x100);
     uint64 spp = reg->val & SSTATUS_SPP;
 
-    if(spp == 0) {
+    if(cur_exe_mode == SUPERVISOR && spp == 0) {
         cur_exe_mode = USER;
         struct vm_reg *sepc = get_privi_reg(&state, 0x141);
         p->trapframe->epc = sepc->val - 4;
