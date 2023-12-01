@@ -210,12 +210,14 @@ void remove_page(uint64 lower_bound) {
 }
 
 uint64 get_PTE_perm(uint64 pmpauth) {
+    uint64 basic_perm = PTE_U | PTE_V;
+
     if(pmpauth == 1) {
-        return PTE_U | PTE_R;
+        return basic_perm | PTE_R;
     } else if(pmpauth == 2) {
-        return PTE_U | PTE_W;
+        return basic_perm | PTE_W;
     } else {
-        return PTE_U | PTE_R | PTE_W | PTE_X;
+        return basic_perm | PTE_R | PTE_W | PTE_X;
     }
 }
 
