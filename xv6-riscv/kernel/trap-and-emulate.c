@@ -8,6 +8,9 @@
 #include "vm_state.h"
 #include "rw_registers.h"
 
+#define VM_VA_START_AT 0x80000000
+#define VM_VA_END_AT 0x80400000
+
 enum execution_mode cur_exe_mode;
 struct vm_state state;
 
@@ -130,6 +133,8 @@ uint32 do_emulate_csrw(struct instruct *trap_instrucion) {
     }
 }
 
+void generate_mem_protection_area(void);
+
 uint32 do_emulate_mret(struct instruct *trap_instruction) {
     struct proc *p = myproc();
     struct vm_reg *reg = get_privi_reg(&state, 0x300);
@@ -139,11 +144,81 @@ uint32 do_emulate_mret(struct instruct *trap_instruction) {
         cur_exe_mode = SUPERVISOR;
         struct vm_reg *mepc = get_privi_reg(&state, 0x341);
         p->trapframe->epc = mepc->val - 4;
+
+        generate_mem_protection_area();
     } else {
         return 0;
     }
 
     return 1;
+}
+
+void backup_pt(void);
+void protect_mem_area(void);
+
+void generate_mem_protection_area(void) {
+    backup_pt();
+    protect_mem_area();
+}
+
+void backup_pt(void) {
+    struct proc *p = myproc();
+    p->vm_pagetable = uvmcreate();
+    uvmcopy(p->pagetable, p->vm_pagetable, p->sz);
+}
+
+uint64 get_PTE_perm(uint64);
+uint64 change_perm(uint64, uint64);
+void remove_page(uint64);
+
+void protect_mem_area(void) {
+    struct vm_reg *pmpconfig0 = get_privi_reg(&state, 0x3a0);
+    uint64 pmpauth = pmpconfig0->val & 3;
+    uint64 perm = get_PTE_perm(pmpauth);
+
+    struct vm_reg *pmpaddr0 = get_privi_reg(&state, 0x3b0);
+    uint64 upper_bound = (pmpaddr0->val << 2);
+
+    uint64 lower_bound = VM_VA_START_AT;
+    if(upper_bound > VM_VA_START_AT) {
+        lower_bound = change_perm(upper_bound, perm);
+    }
+    remove_page(lower_bound);
+}
+
+uint64 change_perm(uint64 upper_bound, uint64 perm) {
+    struct proc *p = myproc();
+    pte_t *pte;
+    uint64 pa;
+    uint64 start_at;
+
+    for(start_at = VM_VA_START_AT; start_at < upper_bound; start_at += PGSIZE) {
+        pte = walk(p->pagetable, start_at, 0);
+        pa = PTE2PA(*pte);
+        *pte = PA2PTE(pa) | perm;
+    }
+
+    return start_at;
+}
+
+void remove_page(uint64 lower_bound) {
+    struct proc *p = myproc();
+
+    for(uint64 start_at = lower_bound; start_at < VM_VA_END_AT; start_at += PGSIZE) {
+        uvmunmap(p->pagetable, start_at, 1, 0);
+    }
+}
+
+uint64 get_PTE_perm(uint64 pmpauth) {
+    uint64 basic_perm = PTE_U | PTE_V;
+
+    if(pmpauth == 1) {
+        return basic_perm | PTE_R;
+    } else if(pmpauth == 2) {
+        return basic_perm | PTE_W;
+    } else {
+        return basic_perm | PTE_R | PTE_W | PTE_X;
+    }
 }
 
 uint32 do_emulate_sret(struct instruct *trap_instruction) {
