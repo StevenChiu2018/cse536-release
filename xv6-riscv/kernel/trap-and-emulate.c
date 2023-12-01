@@ -163,7 +163,7 @@ void prepare_US_page_table(void) {
 void backup_pt(void) {
     struct proc *p = myproc();
     p->vm_pagetable = p->pagetable;
-    p->pagetable = uvmcreate();
+    p->pagetable = proc_pagetable(p);
 }
 
 uint64 get_PTE_perm(uint64);
