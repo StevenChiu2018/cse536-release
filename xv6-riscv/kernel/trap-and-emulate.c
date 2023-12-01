@@ -133,7 +133,7 @@ uint32 do_emulate_csrw(struct instruct *trap_instrucion) {
     }
 }
 
-void remove_protected_mem_area(void);
+void generate_mem_protection_area(void);
 
 uint32 do_emulate_mret(struct instruct *trap_instruction) {
     struct proc *p = myproc();
@@ -145,7 +145,7 @@ uint32 do_emulate_mret(struct instruct *trap_instruction) {
         struct vm_reg *mepc = get_privi_reg(&state, 0x341);
         p->trapframe->epc = mepc->val - 4;
 
-        remove_protected_mem_area();
+        generate_mem_protection_area();
     } else {
         return 0;
     }
@@ -154,11 +154,11 @@ uint32 do_emulate_mret(struct instruct *trap_instruction) {
 }
 
 void backup_pt(void);
-void remove_mem_protection_area(void);
+void protect_mem_area(void);
 
-void remove_protected_mem_area(void) {
+void generate_mem_protection_area(void) {
     backup_pt();
-    prepare_mem_protection_area();
+    protect_mem_area();
 }
 
 void backup_pt(void) {
@@ -171,7 +171,7 @@ uint64 get_PTE_perm(uint64);
 uint64 change_perm(uint64, uint64);
 void remove_page(uint64);
 
-void remove_mem_protection_area(void) {
+void protect_mem_area(void) {
     struct vm_reg *pmpconfig0 = get_privi_reg(&state, 0x3a0);
     uint64 pmpauth = pmpconfig0->val & 3;
     uint64 perm = get_PTE_perm(pmpauth);
